@@ -1,0 +1,16 @@
+__pycache__
+*.pyc
+*.pyo
+*.so
+*.egg-info
+*.pyc
+*.pyo
+*.so
+*.egg-info
+*.pyc
+.mypy_cache
+.vscode
+.venv
+
+node_modules
+
