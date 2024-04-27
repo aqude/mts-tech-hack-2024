@@ -29,5 +29,5 @@ class GlobalEvent(Base):
     tickets = sa.Column("tickets", sa.Integer, nullable=False, default=0)
     tags = relationship("Tag", secondary="global_events_tags", back_populates="events")
     users = relationship(
-        "User", secondary="global_events_users", back_populates="events"
+        "User", secondary="global_events_users", back_populates="global_events"
     )
