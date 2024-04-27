@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+asyncpg
+psycopg2-binary
+sqlalchemy
+alembic
+pydantic-settings
+PyJWT
+python-multipart
