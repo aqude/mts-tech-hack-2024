@@ -23,11 +23,9 @@ def upgrade() -> None:
     op.create_table('cities',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('short_name', sa.String(length=255), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_cities_name'), 'cities', ['name'], unique=False)
-    op.create_index(op.f('ix_cities_short_name'), 'cities', ['short_name'], unique=False)
     op.create_table('organizers',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -89,7 +87,6 @@ def downgrade() -> None:
     op.drop_table('venues')
     op.drop_table('tags')
     op.drop_table('organizers')
-    op.drop_index(op.f('ix_cities_short_name'), table_name='cities')
     op.drop_index(op.f('ix_cities_name'), table_name='cities')
     op.drop_table('cities')
     # ### end Alembic commands ###

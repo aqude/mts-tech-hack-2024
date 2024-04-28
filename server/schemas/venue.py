@@ -2,9 +2,15 @@ import uuid
 from pydantic import BaseModel
 
 
-class VenueResponse(BaseModel):
-    id: uuid.UUID
+class VenueBaseModelResponse(BaseModel):
+    id: str
+
+
+class VenueResponseCreate(VenueBaseModelResponse):
     title: str
     address: str
     city_id: int
-    scheme: str
+
+
+class VenueResponse(VenueResponseCreate):
+    events: list
