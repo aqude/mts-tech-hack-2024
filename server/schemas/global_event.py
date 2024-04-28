@@ -1,5 +1,11 @@
-class GlobalEventResponse:
+from pydantic import BaseModel
+
+
+class GlobalEventBaseModelRequest(BaseModel):
     id: str
+
+
+class GlobalEventResponse(GlobalEventBaseModelRequest):
     title: str
     description: str
     date: str
