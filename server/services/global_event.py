@@ -8,8 +8,8 @@ async def read_global_events(session) -> list[GlobalEvent]:
     return global_events.scalars().all()
 
 
-async def add_global_event(session, title, description, date, organizer, venue, tickets, tags, users):
-    global_event = GlobalEvent(title=title, description=description, date=date, organizer=organizer, venue=venue, tickets=tickets, tags=tags, users=users)
+async def add_global_event(session, title, description, date, organizer_id, venue, tickets, tags, users):
+    global_event = GlobalEvent(title=title, description=description, date=date, organizer_id=organizer_id, venue=venue, tickets=tickets, tags=tags, users=users)
     session.add(global_event)
     await session.commit()
     await session.refresh(global_event)

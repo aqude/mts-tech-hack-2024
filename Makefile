@@ -8,6 +8,14 @@ run:
 
 	@docker compose --env-file ./server/.env up -d
 
+run-db-dev:
+	@echo "Running database..."
+	@docker compose --env-file ./server/.env up -d postgres
+	@if not exist "server\core\migrations" ( \
+		cd server && alembic init core\migrations \
+	)
+	@cd server && alembic -c alembic.ini upgrade head
+
 stop:
 	@echo "Stopping..."
 
