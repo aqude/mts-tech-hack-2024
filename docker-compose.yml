@@ -29,7 +29,6 @@ services:
 #      postgres:
 #        condition: service_healthy
 
-
 volumes:
   psql_data:
 

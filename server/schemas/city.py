@@ -1,8 +1,10 @@
 from pydantic import BaseModel
 
 
-class CityResponse(BaseModel):
+class CityBaseResponse(BaseModel):
     id: int
+
+
+class CityResponse(CityBaseResponse):
     name: str
-    short_name: str
     venues: list

@@ -1,25 +1,28 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from models import City
 
 
-async def read_cities(session):
-    cities = await session.execute(select(City))
+async def read_cities(db: AsyncSession) -> list[City]:
+    cities = await db.execute(select(City).options(selectinload(City.venues)))
     return cities.scalars().all()
 
 
-async def add_city(session, name):
+async def add_city(db: AsyncSession, name) -> int:
     city = City(name=name)
-    session.add(city)
-    await session.commit()
-    await session.refresh(city)
-    return city
+    db.add(city)
+    await db.commit()
+    await db.refresh(city)
+    return city.id
 
 
-async def delete_city(session, name):
-    city = await session.execute(select(City).where(City.name == name))
-    city = city.scalars().first()
+async def delete_city(db: AsyncSession, city_id: int) -> int | None:
+    city = await db.execute(select(City).options(selectinload(City.venues)).where(City.id == city_id))
+    city = city.scalar()
     if not city:
         return None
-    session.delete(city)
-    await session.commit()
+    await db.delete(city)
+    await db.commit()
+    return city.id
