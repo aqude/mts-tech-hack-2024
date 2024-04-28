@@ -11,6 +11,6 @@ __pycache__
 .mypy_cache
 .vscode
 .venv
-
+.idea
 node_modules
 
