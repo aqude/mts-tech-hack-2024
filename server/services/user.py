@@ -90,3 +90,8 @@ async def create_user(session: AsyncSession, phone: str) -> models.User:
         raise HTTPException(status_code=409, detail="User already exists")
     await session.refresh(user)
     return user
+
+
+async def get_users(session: AsyncSession) -> list[models.User]:
+    result = await session.execute(select(models.User))
+    return list(result.scalars().all())

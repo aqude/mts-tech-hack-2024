@@ -1,4 +1,8 @@
 from .user import *
+from .organizer import *
+from .venue import *
+from .city import *
+
 
 __all__ = [
     "get_user_by_phone",
@@ -7,6 +11,3 @@ __all__ = [
     "verify_refresh_token",
     "get_current_user",
 ]
-
-
-from .city import *

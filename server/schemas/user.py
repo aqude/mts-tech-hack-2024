@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel
 
 
@@ -15,4 +16,6 @@ class RefreshRequest(BaseModel):
 
 
 class UserResponse(BaseModel):
+    id: uuid.UUID
     phone: str
+    is_superuser: bool

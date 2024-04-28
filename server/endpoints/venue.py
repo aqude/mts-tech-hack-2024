@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.database import get_session
+import services
+import uuid
 from schemas.venue import VenueResponse, VenueBaseModelResponse, VenueResponseCreate
 from services.venue import read_venues_handler, add_venue_handler, update_venue_handler, delete_venue_handler
+
 
 venue_router = APIRouter(prefix="/api/venue", tags=["Venue"])
 
@@ -22,6 +24,14 @@ async def read_venues(db: AsyncSession = Depends(get_session)) -> list[VenueResp
         for venue in venues
     ]
     return _venues
+
+
+@venue_router.get("/{venue_id}", response_model=VenueResponse)
+async def get_venue(venue_id: uuid.UUID, db: AsyncSession = Depends(get_session)):
+    venue = await services.get_venue_by_id(db, venue_id)
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return venue
 
 
 @venue_router.post("/", response_model=VenueResponseCreate)

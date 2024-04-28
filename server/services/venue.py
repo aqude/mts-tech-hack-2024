@@ -1,15 +1,27 @@
 import uuid
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
+import models
 from models import Venue
 from schemas.venue import VenueResponse
 
 
-# места проведения мероприятий
+async def get_venues(session: AsyncSession) -> list[models.Venue]:
+    result = await session.execute(select(models.Venue).order_by(models.Venue.title))
+    return list(result.scalars().all())
 
+
+async def get_venue_by_id(
+    session: AsyncSession, venue_id: uuid.UUID
+) -> models.Venue | None:
+    result = await session.execute(
+        select(models.Venue).where(models.Venue.id == venue_id)
+    )
+    return result.scalar()
+  
+
+# места проведения мероприятий
 async def read_venues_handler(db: AsyncSession) -> list[Venue]:
     venues = await db.execute(select(Venue).options(selectinload(Venue.events)))
     return venues.scalars().all()
