@@ -1,3 +1,4 @@
+from typing import Sequence
 import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +23,7 @@ async def get_venue_by_id(
 
 
 # места проведения мероприятий
-async def read_venues_handler(db: AsyncSession) -> list[Venue]:
+async def read_venues_handler(db: AsyncSession) -> Sequence[Venue]:
     venues = await db.execute(select(Venue).options(selectinload(Venue.events)))
     return venues.scalars().all()
 

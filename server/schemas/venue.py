@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class VenueBaseModelResponse(BaseModel):
-    id: str
+    id: uuid.UUID
 
 
 class VenueResponseCreate(VenueBaseModelResponse):

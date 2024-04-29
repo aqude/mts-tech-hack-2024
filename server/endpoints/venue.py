@@ -1,3 +1,4 @@
+from typing import Sequence
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_session
@@ -8,7 +9,6 @@ import uuid
 from schemas.venue import (
     VenueRequest,
     VenueResponse,
-    VenueBaseModelResponse,
     VenueResponseCreate,
     VenueUpdateRequest,
 )
@@ -24,19 +24,10 @@ venue_router = APIRouter(prefix="/api/venue", tags=["Venue"])
 
 
 @venue_router.get("/", response_model=list[VenueResponse])
-async def read_venues(db: AsyncSession = Depends(get_session)) -> list[VenueResponse]:
-    venues = await read_venues_handler(db)
-    _venues = [
-        VenueResponse(
-            id=str(venue.id),
-            title=str(venue.title),
-            address=str(venue.address),
-            city_id=int(venue.city_id),
-            events=[str(event.id) for event in venue.events],
-        )
-        for venue in venues
-    ]
-    return _venues
+async def read_venues(
+    db: AsyncSession = Depends(get_session),
+) -> Sequence[VenueResponse]:
+    return await read_venues_handler(db)
 
 
 @venue_router.get("/{venue_id}", response_model=VenueResponse)
@@ -73,7 +64,7 @@ async def update_venue(
     return await update_venue_handler(db, venue, data)
 
 
-@venue_router.delete("/{venue_id}", response_model=VenueBaseModelResponse)
+@venue_router.delete("/{venue_id}")
 async def delete_venue(
     venue_id: uuid.UUID,
     db: AsyncSession = Depends(get_session),
