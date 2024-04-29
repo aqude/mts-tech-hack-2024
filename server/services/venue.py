@@ -1,5 +1,6 @@
 from typing import Sequence
 import uuid
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -32,6 +33,10 @@ async def add_venue_handler(
     db: AsyncSession, title: str, address: str, city_id: int
 ) -> Venue:
     uuid_id = str(uuid.uuid4())  # Генерация UUID
+    result = await db.execute(select(models.City).where(models.City.id == city_id))
+    city = result.scalar()
+    if not city:
+        raise HTTPException(status_code=404, detail="City not found")
     venue = Venue(id=uuid_id, title=title, address=address, city_id=city_id)
     db.add(venue)
     await db.commit()
@@ -42,6 +47,10 @@ async def add_venue_handler(
 async def update_venue_handler(
     db: AsyncSession, venue: Venue, data: VenueUpdateRequest
 ) -> Venue:
+    result = await db.execute(select(models.City).where(models.City.id == data.city_id))
+    city = result.scalar()
+    if not city:
+        raise HTTPException(status_code=404, detail="City not found")
     venue.title = data.title
     venue.address = data.address
     venue.city_id = data.city_id
