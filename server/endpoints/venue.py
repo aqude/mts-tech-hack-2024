@@ -4,7 +4,12 @@ from core.database import get_session
 import services
 import uuid
 from schemas.venue import VenueResponse, VenueBaseModelResponse, VenueResponseCreate
-from services.venue import read_venues_handler, add_venue_handler, update_venue_handler, delete_venue_handler
+from services.venue import (
+    read_venues_handler,
+    add_venue_handler,
+    update_venue_handler,
+    delete_venue_handler,
+)
 
 
 venue_router = APIRouter(prefix="/api/venue", tags=["Venue"])
@@ -35,28 +40,53 @@ async def get_venue(venue_id: uuid.UUID, db: AsyncSession = Depends(get_session)
 
 
 @venue_router.post("/", response_model=VenueResponseCreate)
-async def add_venue(db: AsyncSession = Depends(get_session), title: str = None, address: str = None,
-                    city_id: int = None) -> VenueResponseCreate:
+async def add_venue(
+    db: AsyncSession = Depends(get_session),
+    title: str = None,
+    address: str = None,
+    city_id: int = None,
+) -> VenueResponseCreate:
     venues = await add_venue_handler(db, title, address, city_id)
-    return VenueResponseCreate(id=str(venues.id), title=str(venues.title), address=str(venues.address),
-                               city_id=int(venues.city_id))
+    return VenueResponseCreate(
+        id=str(venues.id),
+        title=str(venues.title),
+        address=str(venues.address),
+        city_id=int(venues.city_id),
+    )
 
 
 @venue_router.put("/", response_model=VenueResponseCreate)
-async def update_venue(db: AsyncSession = Depends(get_session), venue_id: str = None, new_title: str = None,
-                       new_address: str = None, new_city_id: int = None) -> VenueResponseCreate | HTTPException:
+async def update_venue(
+    db: AsyncSession = Depends(get_session),
+    venue_id: str = None,
+    new_title: str = None,
+    new_address: str = None,
+    new_city_id: int = None,
+) -> VenueResponseCreate | HTTPException:
     try:
-        venues = await update_venue_handler(db, venue_id, new_title, new_address, new_city_id)
-        return VenueResponseCreate(id=str(venues.id), title=str(venues.title), address=str(venues.address), city_id=int(venues.city_id))
+        venues = await update_venue_handler(
+            db, venue_id, new_title, new_address, new_city_id
+        )
+        return VenueResponseCreate(
+            id=str(venues.id),
+            title=str(venues.title),
+            address=str(venues.address),
+            city_id=int(venues.city_id),
+        )
     except ValueError:
-        return HTTPException(status_code=404, detail="Venue not found with id: {}".format(venue_id))
+        return HTTPException(
+            status_code=404, detail="Venue not found with id: {}".format(venue_id)
+        )
 
 
 @venue_router.delete("/", response_model=VenueBaseModelResponse)
-async def delete_venue(db: AsyncSession = Depends(get_session),
-                       venue_id: str = None) -> VenueBaseModelResponse | HTTPException:
+async def delete_venue(
+    db: AsyncSession = Depends(get_session), venue_id: str = None
+) -> VenueBaseModelResponse | HTTPException:
     _venue_id = await delete_venue_handler(db, venue_id)
     if _venue_id is None:
-        raise HTTPException(status_code=404, detail="Venue not found with id: {}".format(venue_id))
+        raise HTTPException(
+            status_code=404, detail="Venue not found with id: {}".format(venue_id)
+        )
 
     return VenueBaseModelResponse(id=str(_venue_id))

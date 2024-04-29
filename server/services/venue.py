@@ -19,7 +19,7 @@ async def get_venue_by_id(
         select(models.Venue).where(models.Venue.id == venue_id)
     )
     return result.scalar()
-  
+
 
 # места проведения мероприятий
 async def read_venues_handler(db: AsyncSession) -> list[Venue]:
@@ -27,7 +27,9 @@ async def read_venues_handler(db: AsyncSession) -> list[Venue]:
     return venues.scalars().all()
 
 
-async def add_venue_handler(db: AsyncSession, title: str, address: str, city_id: int) -> Venue:
+async def add_venue_handler(
+    db: AsyncSession, title: str, address: str, city_id: int
+) -> Venue:
     uuid_id = str(uuid.uuid4())  # Генерация UUID
     venue = Venue(id=uuid_id, title=title, address=address, city_id=city_id)
     db.add(venue)
@@ -36,8 +38,13 @@ async def add_venue_handler(db: AsyncSession, title: str, address: str, city_id:
     return venue
 
 
-async def update_venue_handler(db: AsyncSession, venue_id: str, new_title: str = None, new_address: str = None,
-                               new_city_id: int = None) -> Venue | None:
+async def update_venue_handler(
+    db: AsyncSession,
+    venue_id: str,
+    new_title: str = None,
+    new_address: str = None,
+    new_city_id: int = None,
+) -> Venue | None:
     venue = await db.get(Venue, venue_id)
     if venue:
         if new_title is not None:
@@ -54,7 +61,9 @@ async def update_venue_handler(db: AsyncSession, venue_id: str, new_title: str =
 
 
 async def delete_venue_handler(db: AsyncSession, id: str) -> str | None:
-    venue = await db.execute(select(Venue).options(selectinload(Venue.events)).where(Venue.id == id))
+    venue = await db.execute(
+        select(Venue).options(selectinload(Venue.events)).where(Venue.id == id)
+    )
     venue = venue.scalar()
     if not venue:
         return None
