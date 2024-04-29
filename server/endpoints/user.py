@@ -2,13 +2,22 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 import models
-from schemas.user import LoginResponse, LoginRequest, RefreshRequest, UserResponse
+from schemas.user import (
+    LoginResponse,
+    LoginRequest,
+    RefreshRequest,
+    UserResponse,
+    UserCreateRequest,
+    UserUpdateRequest,
+)
 from schemas.event import EventResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 import services
 from core.settings import settings
 from core.database import get_session
 import uuid
+
+from services.user import get_current_user
 
 user_router = APIRouter(
     prefix="/api/user",
@@ -113,3 +122,45 @@ async def get_user_events(user_id: uuid.UUID, db: AsyncSession = Depends(get_ses
 
     await db.refresh(user, ["global_events"])
     return user.global_events
+
+
+# Admin endpoints
+@user_router.post("/", response_model=UserResponse)
+async def create_user(
+    data: UserCreateRequest,
+    db: AsyncSession = Depends(get_session),
+    user: models.User = Depends(get_current_user),
+):
+    if not user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    user = await services.create_user(db, data.phone, data.is_superuser)
+    return user
+
+
+@user_router.put("/", response_model=UserResponse)
+async def update_user(
+    data: UserUpdateRequest,
+    db: AsyncSession = Depends(get_session),
+    user: models.User = Depends(get_current_user),
+):
+    if not user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    new_user = await services.get_user_by_id(db, str(data.id))
+    if not new_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return await services.update_user(db, new_user, data)
+
+
+@user_router.delete("/{user_id}")
+async def delete_user(
+    user_id: uuid.UUID,
+    db: AsyncSession = Depends(get_session),
+    user: models.User = Depends(get_current_user),
+):
+    if not user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    new_user = await services.get_user_by_id(db, str(user_id))
+    if not new_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await services.delete_user(db, new_user)
