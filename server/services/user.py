@@ -9,6 +9,7 @@ from core.database import get_session
 from datetime import datetime, timedelta, UTC
 import jwt
 import models
+from schemas.user import UserUpdateRequest
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/token")
 
@@ -81,8 +82,10 @@ async def get_current_user(
     return user
 
 
-async def create_user(session: AsyncSession, phone: str) -> models.User:
-    user = models.User(id=uuid.uuid4(), phone=phone)
+async def create_user(
+    session: AsyncSession, phone: str, is_superuser: bool = False
+) -> models.User:
+    user = models.User(id=uuid.uuid4(), phone=phone, is_superuser=is_superuser)
     session.add(user)
     try:
         await session.commit()
@@ -95,3 +98,18 @@ async def create_user(session: AsyncSession, phone: str) -> models.User:
 async def get_users(session: AsyncSession) -> list[models.User]:
     result = await session.execute(select(models.User))
     return list(result.scalars().all())
+
+
+async def update_user(
+    session: AsyncSession, user: models.User, data: UserUpdateRequest
+) -> models.User:
+    user.phone = data.phone
+    user.is_superuser = data.is_superuser
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+async def delete_user(session: AsyncSession, user: models.User):
+    await session.delete(user)
+    await session.commit()

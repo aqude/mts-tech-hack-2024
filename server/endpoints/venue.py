@@ -1,9 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_session
+import models
 import services
+from services.user import get_current_user
 import uuid
-from schemas.venue import VenueResponse, VenueBaseModelResponse, VenueResponseCreate
+from schemas.venue import (
+    VenueRequest,
+    VenueResponse,
+    VenueBaseModelResponse,
+    VenueResponseCreate,
+    VenueUpdateRequest,
+)
 from services.venue import (
     read_venues_handler,
     add_venue_handler,
@@ -41,52 +49,39 @@ async def get_venue(venue_id: uuid.UUID, db: AsyncSession = Depends(get_session)
 
 @venue_router.post("/", response_model=VenueResponseCreate)
 async def add_venue(
+    data: VenueRequest,
     db: AsyncSession = Depends(get_session),
-    title: str = None,
-    address: str = None,
-    city_id: int = None,
+    user: models.User = Depends(get_current_user),
 ) -> VenueResponseCreate:
-    venues = await add_venue_handler(db, title, address, city_id)
-    return VenueResponseCreate(
-        id=str(venues.id),
-        title=str(venues.title),
-        address=str(venues.address),
-        city_id=int(venues.city_id),
-    )
+    if not user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    venue = await add_venue_handler(db, data.title, data.address, data.city_id)
+    return venue
 
 
 @venue_router.put("/", response_model=VenueResponseCreate)
 async def update_venue(
+    data: VenueUpdateRequest,
     db: AsyncSession = Depends(get_session),
-    venue_id: str = None,
-    new_title: str = None,
-    new_address: str = None,
-    new_city_id: int = None,
+    user: models.User = Depends(get_current_user),
 ) -> VenueResponseCreate | HTTPException:
-    try:
-        venues = await update_venue_handler(
-            db, venue_id, new_title, new_address, new_city_id
-        )
-        return VenueResponseCreate(
-            id=str(venues.id),
-            title=str(venues.title),
-            address=str(venues.address),
-            city_id=int(venues.city_id),
-        )
-    except ValueError:
-        return HTTPException(
-            status_code=404, detail="Venue not found with id: {}".format(venue_id)
-        )
+    if not user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    venue = await services.get_venue_by_id(db, data.id)
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return await update_venue_handler(db, venue, data)
 
 
-@venue_router.delete("/", response_model=VenueBaseModelResponse)
+@venue_router.delete("/{venue_id}", response_model=VenueBaseModelResponse)
 async def delete_venue(
-    db: AsyncSession = Depends(get_session), venue_id: str = None
-) -> VenueBaseModelResponse | HTTPException:
-    _venue_id = await delete_venue_handler(db, venue_id)
-    if _venue_id is None:
-        raise HTTPException(
-            status_code=404, detail="Venue not found with id: {}".format(venue_id)
-        )
-
-    return VenueBaseModelResponse(id=str(_venue_id))
+    venue_id: uuid.UUID,
+    db: AsyncSession = Depends(get_session),
+    user: models.User = Depends(get_current_user),
+):
+    if not user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    venue = await services.get_venue_by_id(db, venue_id)
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return await delete_venue_handler(db, venue)
