@@ -31,3 +31,4 @@ class GlobalEvent(Base):
     users = relationship(
         "User", secondary="global_events_users", back_populates="global_events"
     )
+
