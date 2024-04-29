@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from models import GlobalEvent, Organizer, Venue
+from models import GlobalEvent, Organizer, Venue, User
 from schemas.global_event import GlobalEventRequest, GlobalEventResponse
 
 
@@ -22,22 +23,24 @@ async def read_global_events_handler(db: AsyncSession) -> list[GlobalEvent]:
 async def add_global_event_handler(
     db: AsyncSession, event_data: GlobalEventRequest
 ) -> GlobalEventResponse:
-    organizer = await db.get(Organizer, event_data.organizer)
-    venue = await db.get(Venue, event_data.venue)
     global_event = GlobalEvent(
+        id=str(uuid.uuid4()),
         title=event_data.title,
         description=event_data.description,
-        date=event_data.date,
-        organizer=organizer,
-        venue=venue,
+        date=datetime.strptime(event_data.date, "%Y-%m-%d %H:%M:%S"),
+        organizer_id=event_data.organizer_id,
+        venue_id=event_data.venue,
         tickets=event_data.tickets,
-        tags=event_data.tags,
-        users=event_data.users,
     )
     db.add(global_event)
     await db.commit()
-    await db.refresh(global_event)
-    return GlobalEventResponse(**global_event.dict())
+    await db.refresh(
+        global_event,
+        ["tags", "users", "venue", "organizer"],
+    )
+    return GlobalEventResponse(
+        **global_event.dict(),
+    )
 
 
 async def update_global_event_handler(
