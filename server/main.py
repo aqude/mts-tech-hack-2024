@@ -15,6 +15,7 @@ app.include_router(city_router)
 app.include_router(global_event)
 app.include_router(venue_router)
 
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}

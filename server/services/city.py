@@ -19,7 +19,9 @@ async def add_city(db: AsyncSession, name) -> int:
 
 
 async def delete_city(db: AsyncSession, city_id: int) -> int | None:
-    city = await db.execute(select(City).options(selectinload(City.venues)).where(City.id == city_id))
+    city = await db.execute(
+        select(City).options(selectinload(City.venues)).where(City.id == city_id)
+    )
     city = city.scalar()
     if not city:
         return None
