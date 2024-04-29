@@ -8,3 +8,4 @@ alembic
 pydantic-settings
 PyJWT
 python-multipart
+phonenumbers

@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, UTC
 import jwt
 import models
 from schemas.user import UserUpdateRequest
+import utils
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/token")
 
@@ -85,7 +86,11 @@ async def get_current_user(
 async def create_user(
     session: AsyncSession, phone: str, is_superuser: bool = False
 ) -> models.User:
-    user = models.User(id=uuid.uuid4(), phone=phone, is_superuser=is_superuser)
+    if not utils.is_phone_valid(phone):
+        raise HTTPException(status_code=400, detail="Invalid phone number")
+    user = models.User(
+        id=uuid.uuid4(), phone=utils.normalize_phone(phone), is_superuser=is_superuser
+    )
     session.add(user)
     try:
         await session.commit()
@@ -103,7 +108,9 @@ async def get_users(session: AsyncSession) -> list[models.User]:
 async def update_user(
     session: AsyncSession, user: models.User, data: UserUpdateRequest
 ) -> models.User:
-    user.phone = data.phone
+    if not utils.is_phone_valid(data.phone):
+        raise HTTPException(status_code=400, detail="Invalid phone number")
+    user.phone = utils.normalize_phone(data.phone)
     user.is_superuser = data.is_superuser
     await session.commit()
     await session.refresh(user)
